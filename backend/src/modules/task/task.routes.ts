@@ -15,7 +15,7 @@ router.use(authMiddleware);
 router.post('/', taskController.createTask);
 router.get('/', taskController.listTask);
 router.get('/:id', taskController.getTask);
-router.get('/:id', taskController.updateTask);
-router.get('/:id', taskController.deleteTask);
+router.patch('/:id', taskController.updateTask);
+router.delete('/:id', taskController.deleteTask);
 
 export default router;

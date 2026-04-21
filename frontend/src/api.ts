@@ -10,7 +10,12 @@ export const register = async (email: string, password: string) => {
   });
 
   if (!res.ok) {
-    throw new Error("Registration failed");
+    let message = "Registration failed";
+    try {
+      const err = await res.json();
+      message = err.message || message;
+    } catch {}
+    throw new Error(message);
   }
 
   return res.json();
@@ -26,7 +31,8 @@ export const login = async (email: string, password: string) => {
   });
 
   if (!res.ok) {
-    throw new Error("Login failed");
+    const err = await res.json();
+    throw new Error(err.message || "Registration failed");
   }
 
   return res.json();

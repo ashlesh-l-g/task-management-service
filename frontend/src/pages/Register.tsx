@@ -15,8 +15,8 @@ export default function Register({ onRegister, goToLogin }: Props) {
       await register(email, password);
       alert("Registration successful");
       onRegister();
-    } catch {
-      alert("Registration failed");
+    } catch (e: any) {
+      alert(e.message);
     }
   };
 
