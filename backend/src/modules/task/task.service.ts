@@ -7,6 +7,7 @@ import {
   TaskAlreadyCompletedError,
   TaskDeletionNotAllowedError
 } from './task.errors';
+import { redis } from '../../shared/cache/redis';
 
 export interface ITaskService {
   createTask(title: string, priority: TaskPriority, userId: string): Promise<Task>;
@@ -28,43 +29,48 @@ export class TaskService implements ITaskService {
   constructor(private readonly taskRepo: ITaskRepository) {}
 
   async createTask(
-    title: string,
-    priority: TaskPriority,
-    userId: string
-  ): Promise<Task> {
+  title: string,
+  priority: TaskPriority,
+  userId: string
+): Promise<Task> {
 
-    const now = new Date();
+  const now = new Date();
 
-    const startOfDayUTC = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        0,0,0
-    ));
+  const startOfDayUTC = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      0,0,0
+  ));
 
-    const endOfDayUTC = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() + 1,
-        0,0,0
-    ));
+  const endOfDayUTC = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + 1,
+      0,0,0
+  ));
 
-    const count = await this.taskRepo.countByUserAndDate(
-        userId,
-        startOfDayUTC,
-        endOfDayUTC
-    );
+  const count = await this.taskRepo.countByUserAndDate(
+      userId,
+      startOfDayUTC,
+      endOfDayUTC
+  );
 
-    if(count >= 50){
-        throw new TaskLimitExceededError();
-    }
-
-    return this.taskRepo.create({
-        title,
-        priority,
-        userId
-    });
+  if(count >= 50){
+      throw new TaskLimitExceededError();
   }
+
+  const task = await this.taskRepo.create({
+      title,
+      priority,
+      userId
+  });
+
+  const key = `task:${userId}:${task.id}`;
+  await redis.set(key, JSON.stringify(task), 'EX', 300);
+
+  return task;
+}
   async getTask(id: string, userId: string): Promise<Task> {
     const task = await this.taskRepo.findByIdAndUserId(id, userId);
 
