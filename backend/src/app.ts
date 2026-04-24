@@ -3,6 +3,8 @@ import cors from "cors";
 
 import userRoutes from './modules/user/user.routes';
 import taskRoutes from './modules/task/task.routes';
+import paymentRoutes from "./modules/payment/payment.routes";
+
 
 import { errorMiddleware } from './shared/middleware/error.middleware';
 
@@ -20,5 +22,7 @@ app.use('/users', userRoutes);
 app.use('/tasks', taskRoutes);
 
 app.use(errorMiddleware);
+
+app.use("/payments", paymentRoutes);
 
 export { app };
