@@ -3,6 +3,7 @@ import { IUserRepository } from "./user.repository";
 import { User } from "./user.types";
 import { hashPassword, comparePassword } from "../../shared/utils/password";
 import { generateToken } from "../../shared/utils/jwt";
+import { redis } from "../../shared/cache/redis"; // <-- ADD
 
 export interface IUserService {
   registerUser(email: string, password: string): Promise<User>;
@@ -43,6 +44,14 @@ export class UserService implements IUserService {
     }
 
     const token = generateToken(user.id);
+
+    // <-- ADD THIS BLOCK
+    await redis.set(
+      `user:${user.id}:token`,
+      token,
+      "EX",
+      60 * 60
+    );
 
     return { token };
   }
